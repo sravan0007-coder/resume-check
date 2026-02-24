@@ -45,7 +45,7 @@ def extract_phone(text):
 
 
 # -------------------------------
-# NAME (BALANCED LOGIC)
+# NAME (IMPROVED)
 # -------------------------------
 def extract_name(text):
     lines = text.split("\n")
@@ -53,18 +53,15 @@ def extract_name(text):
     for line in lines[:10]:
         line = line.strip()
 
-        # skip unwanted
-        if any(word in line.lower() for word in ["email", "phone", "address"]):
+        if any(word in line.lower() for word in ["email", "phone", "address", "telangana"]):
             continue
 
-        # skip numbers
         if any(char.isdigit() for char in line):
             continue
 
         words = line.split()
 
-        # good name condition
-        if 2 <= len(words) <= 3 and len(line) < 30:
+        if 2 <= len(words) <= 3 and line.istitle():
             return line
 
     return None
@@ -130,6 +127,33 @@ def extract_github(text):
 
 
 # -------------------------------
+# ATS DECISION (SELECT / REJECT)
+# -------------------------------
+def decide_selection(data):
+    score = 0
+
+    # Skills scoring
+    if len(data["skills"]) >= 5:
+        score += 2
+    elif len(data["skills"]) >= 3:
+        score += 1
+
+    # Education scoring
+    if data["education"]:
+        score += 1
+
+    # Experience scoring
+    if data["experience"]:
+        score += 2
+
+    # Final decision
+    if score >= 4:
+        return "✅ Selected for Interview"
+    else:
+        return "❌ Not Selected"
+
+
+# -------------------------------
 # MAIN CLASS
 # -------------------------------
 class ResumeParser:
@@ -160,11 +184,33 @@ class ResumeParser:
 
 
 # -------------------------------
-# RUN
+# RUN PROGRAM
 # -------------------------------
 if __name__ == "__main__":
     parser = ResumeParser()
 
-    result = parser.parse_file(r"C:\Users\srava\OneDrive\Desktop\sample_resume.pdf")
+    file_path = r"C:\Users\srava\OneDrive\Desktop\sample_resume.pdf"
 
-    print(result)
+    # Check file exists
+    if not os.path.exists(file_path):
+        print("❌ File not found!")
+    else:
+        result = parser.parse_file(file_path)
+
+        if "error" in result:
+            print("❌ Error:", result["error"])
+        else:
+            print("✅ Resume successfully parsed!\n")
+
+            print("📌 Name:", result["name"])
+            print("📧 Email:", result["email"])
+            print("📱 Phone:", result["phone"])
+            print("🔗 LinkedIn:", result["linkedin"])
+            print("💻 GitHub:", result["github"])
+            print("🛠 Skills:", result["skills"])
+            print("🎓 Education:", result["education"])
+            print("💼 Experience:", result["experience"])
+
+            # FINAL ATS RESULT
+            decision = decide_selection(result)
+            print("\n🎯 RESULT:", decision)
